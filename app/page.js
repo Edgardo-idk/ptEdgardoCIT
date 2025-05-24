@@ -1,101 +1,114 @@
-import Image from "next/image";
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function Home() {
+export default function AuthPage() {
+  const [form, setForm] = useState({ correo: "", password: "" });
+  const [isRegister, setIsRegister] = useState(false);
+  const router = useRouter();
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Metodo para manejar si el formulario se envia a registrar o iniciar sesion
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const url = isRegister ? "/api/register" : "/api/login";
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    if (res.ok) {
+      if (isRegister) {
+        alert("Usuario registrado correctamente");
+        setIsRegister(false);
+        setForm({ correo: "", password: "" });
+      } else {
+        // Guardar el token y el correo para usarlo cuando agendamos citas
+        const data = await res.json();
+        window.localStorage.setItem("correo", form.correo);
+        window.localStorage.setItem("token", data.token);
+        // Redirigir a la pagina de citas
+        router.push("/home");
+      }
+    } else {
+      // Manejo de error
+      const data = await res.json();
+      alert(data.error || "Error");
+    }
+  };
+
+  // Estructura y estilos de la pagina de inicio de sesion y registro
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-200 via-white to-blue-400">
+      <div className="w-full max-w-md bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl p-10 flex flex-col gap-8 border border-blue-100">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center shadow-lg mb-2">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" fill="#fff" />
+              <path d="M12 7v5l4 2" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-extrabold text-blue-700">
+            {isRegister ? "Crear cuenta" : "Bienvenido"}
+          </h2>
+          <p className="text-gray-500 text-sm">
+            {isRegister ? "Regístrate para gestionar tus citas" : "Gestor de Citas Médicas"}
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        {/* Formulario de registro o inicio de sesión */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-blue-700" htmlFor="correo">
+              Correo electrónico
+            </label>
+            <input
+              className="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition text-blue-700"
+              type="email"
+              id="correo"
+              name="correo"
+              value={form.correo}
+              onChange={handleChange}
+              required
+              autoComplete="email"
+              placeholder="tucorreo@ejemplo.com"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-blue-700" htmlFor="password">
+              Contraseña
+            </label>
+            <input
+              className="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition text-blue-700"
+              type="password"
+              id="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              autoComplete={isRegister ? "new-password" : "current-password"}
+              placeholder="********"
+            />
+          </div>
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105"
+          >
+            {isRegister ? "Registrarse" : "Entrar"}
+          </button>
+        </form>
+        {/* Con este boton se cambia el estado de isRegister para alternar entre tipo de formulario */}
+        <button
+          onClick={() => setIsRegister(!isRegister)}
+          className="text-xs text-blue-500 hover:underline text-center transition"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          {isRegister
+            ? "¿Ya tienes cuenta? Inicia sesión"
+            : "¿No tienes cuenta? Regístrate"}
+        </button>
+      </div>
     </div>
   );
 }
